@@ -40,6 +40,7 @@
           v-model="svgName"
         />
         <q-file
+          accept=".svg"
           label="SVG da planta baixa"
           class="tw-px-2 tw-rounded-xl"
           :class="{
