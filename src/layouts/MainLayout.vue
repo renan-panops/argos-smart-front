@@ -222,7 +222,9 @@ const loadLocals = async () => {
   localOptions.value = locals;
   if (localStore.selectedLocal == null && locals != null) {
     [localStore.selectedLocal] = locals;
+    return;
   }
+  localStore.selectedLocal = null;
 };
 
 const handleDeleteLocal = async () => {

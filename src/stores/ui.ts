@@ -9,6 +9,7 @@ export const useUi = defineStore(
     const isDark = ref(false);
     const editSvg = ref(false); // Popup de edição de SVG no inferior da tela
     const addLocation = ref(false); // Dialog de adição de localidade
+    const svgText = ref('');
 
     const setThemeLight = () => {
       setCssVar('secondary', '#FFFFFF');

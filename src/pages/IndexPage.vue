@@ -2,7 +2,7 @@
   <q-page>
     <div
       class="tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-flex tw-flex-col tw-items-center"
-      v-if="selectedSvg == null"
+      v-if="localStore.selectedLocal == null && svgText === ''"
     >
       <q-btn
         @click="uiStore.addLocation = true"
@@ -17,7 +17,7 @@
     <div
       v-else
       @click="handleSvgClick"
-      v-html="svgText"
+      v-html="localStore.selectedLocal?.floor_plant ?? svgText"
       ref="svgElement"
     />
 
@@ -79,7 +79,7 @@
       :data-open="uiStore.editSvg"
       :data-collapsed="collapsed && uiStore.editSvg"
       :data-dark="$q.dark.isActive"
-      class="tw-fixed tw-bottom-4 tw-left-1/2 -tw-translate-x-1/2 tw-bg-neutral-300 tw-p-4 tw-translate-y-[150%] data-[open=true]:tw-translate-y-0 tw-transition-transform tw-ease-in-out tw-rounded-3xl tw-flex tw-flex-col tw-gap-1 data-[dark=true]:tw-bg-neutral-900 tw-shadow data-[collapsed=true]:tw-translate-y-[77%] data-[collapsed=true]:hover:tw-translate-y-[71%]"
+      class="tw-fixed tw-bottom-4 tw-left-1/2 -tw-translate-x-1/2 tw-bg-neutral-300 tw-p-4 tw-translate-y-[150%] data-[open=true]:tw-translate-y-0 tw-transition-transform tw-ease-in-out tw-rounded-3xl tw-flex tw-flex-col tw-gap-1 data-[dark=true]:tw-bg-neutral-900 tw-shadow data-[collapsed=true]:!tw-translate-y-[77%] data-[collapsed=true]:hover:!tw-translate-y-[71%]"
     >
       <div
         class="tw-flex tw-items-center tw-justify-between tw-pb-2"
@@ -115,6 +115,7 @@
           color="primary"
           rounded
           class="tw-rounded-full"
+          @click="saveLocal"
         />
       </div>
     </div>
@@ -169,7 +170,7 @@
 <script setup lang="ts">
 import { useLocal } from 'src/stores/local';
 import { useUi } from 'src/stores/ui';
-import { onBeforeMount, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 
 defineOptions({
   name: 'IndexPage',
@@ -228,5 +229,10 @@ const cancelEdit = () => {
   uiStore.editSvg = false;
   svgName.value = '';
   selectedSvg.value = null;
+  svgText.value = '';
+};
+
+const saveLocal = () => {
+  localStore.postLocal({ name: svgName.value, floor_plant: svgElement.value.innerHTML });
 };
 </script>

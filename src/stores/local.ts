@@ -6,7 +6,7 @@ import { ref } from 'vue';
 type Local = {
   id: string;
   name: string;
-  floor_plan: string;
+  floor_plant: string;
 };
 
 export const useLocal = defineStore(
@@ -19,7 +19,7 @@ export const useLocal = defineStore(
       deleteLocal: false,
     });
 
-    const selectedLocal = ref<Local>();
+    const selectedLocal = ref<Local | null>(null);
 
     /**
      * Lista todos os locais (pavimentos)
@@ -46,7 +46,7 @@ export const useLocal = defineStore(
      * Seta loading.postLocal como true, faz chamada post a API retorna os dados ou notifica o erro
      * e seta o loading.postLocal novamente como false
      */
-    const postLocal = async (payload: unknown): Promise<Local | null> => {
+    const postLocal = async (payload: Omit<Local, 'id'>): Promise<Local | null> => {
       try {
         loading.value.postLocal = true;
         const { data } = await api.post<Local>('/local/', payload);
