@@ -15,37 +15,78 @@
         <q-btn
           :icon="$q.dark.isActive ? 'light_mode' : 'dark_mode'"
           round
-          outline
+          flat
           color="primary"
           @click="toggleTheme"
         >
-          <q-tooltip delay="1000">
+          <q-tooltip :delay="1000">
             {{ $q.dark.isActive ? 'Tema claro' : 'Tema escuro' }}
           </q-tooltip>
         </q-btn>
+
+        <!-- MARK: Botão menu -->
         <q-btn
           class="tw-ml-2"
-          :icon="isMenuOpen ? 'close' : 'menu'"
           color="primary"
           flat
           @click="isMenuOpen = !isMenuOpen"
           round
-        />
+        >
+          <q-icon
+            color="primary"
+            name="chevron_left"
+            size="md"
+            :data-open="isMenuOpen"
+            class="data-[open=true]:-tw-rotate-180 tw-transition-transform"
+          />
+          <q-tooltip
+            :delay="1000"
+            class="tw-whitespace-nowrap"
+          >
+            {{ isMenuOpen ? 'Fechar menu' : 'Abrir menu' }}
+          </q-tooltip>
+        </q-btn>
       </q-toolbar>
     </q-header>
 
     <!-- MARK: Menu -->
     <div
       :data-open="isMenuOpen"
-      class="bg-secondary tw-shadow tw-fixed tw-right-4 tw-top-1/2 -tw-translate-y-1/2 tw-w-96 tw-h-96 tw-rounded-3xl data-[open=true]:tw-translate-x-0 tw-translate-x-[150%] tw-transition-all tw-ease-in-out tw-duration-300"
+      :data-dark="$q.dark.isActive"
+      class="tw-shadow tw-fixed tw-right-4 tw-top-1/2 -tw-translate-y-1/2 tw-w-96 tw-rounded-3xl tw-bg-neutral-300 data-[dark=true]:tw-bg-neutral-900 data-[open=true]:tw-translate-x-0 tw-translate-x-[150%] tw-transition-all tw-ease-in-out tw-duration-300 tw-p-4"
     >
-      <q-select
-        :options="options"
-        label="Pavimento"
-        round
-        outlined
-      />
-      <!-- class="data-[open=true]:tw-bg-red-500" -->
+      <!-- Select -->
+      <label>
+        <div class="tw-rounded-xl bg-secondary tw-px-3">
+          <q-select
+            color="primary"
+            :options="options"
+            label="Pavimento"
+            round
+            borderless
+          />
+        </div>
+      </label>
+
+      <!-- Pavimento -->
+      <div class="tw-pt-3">
+        <span class="text-primary">Total de Vagas no pavimento</span>
+        <ul class="bg-secondary tw-rounded-xl tw-p-3">
+          <li>Disponíveis: 53</li>
+          <li>Disponíveis: 53</li>
+          <li>Disponíveis: 53</li>
+        </ul>
+      </div>
+
+      <!-- Total -->
+      <div class="tw-pt-3">
+        <span class="text-primary">Total de Vagas</span>
+        <ul class="bg-secondary tw-rounded-xl tw-p-3">
+          <li>Disponíveis: 53</li>
+          <li>Disponíveis: 53</li>
+          <li>Disponíveis: 53</li>
+        </ul>
+      </div>
     </div>
 
     <!-- MARK: Página -->
@@ -55,7 +96,10 @@
   </q-layout>
 </template>
 
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+>
 import { useQuasar, setCssVar } from 'quasar';
 import { ref } from 'vue';
 
