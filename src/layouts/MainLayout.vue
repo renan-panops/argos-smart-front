@@ -17,7 +17,7 @@
           round
           flat
           color="primary"
-          @click="toggleTheme"
+          @click="uiStore.toggleTheme()"
         >
           <q-tooltip :delay="1000">
             {{ $q.dark.isActive ? 'Tema claro' : 'Tema escuro' }}
@@ -53,20 +53,18 @@
     <div
       :data-open="isMenuOpen"
       :data-dark="$q.dark.isActive"
-      class="tw-shadow tw-fixed tw-right-4 tw-top-1/2 -tw-translate-y-1/2 tw-w-96 tw-rounded-3xl tw-bg-neutral-300 data-[dark=true]:tw-bg-neutral-900 data-[open=true]:tw-translate-x-0 tw-translate-x-[150%] tw-transition-all tw-ease-in-out tw-duration-300 tw-p-4"
+      class="tw-z-10 tw-shadow tw-fixed tw-right-4 tw-top-1/2 -tw-translate-y-1/2 tw-w-96 tw-rounded-3xl tw-bg-neutral-300 data-[dark=true]:tw-bg-neutral-900 data-[open=true]:tw-translate-x-0 tw-translate-x-[150%] tw-transition-all tw-ease-in-out tw-duration-300 tw-p-4"
     >
       <!-- Select -->
-      <label>
-        <div class="tw-rounded-xl bg-secondary tw-px-3">
-          <q-select
-            color="primary"
-            :options="options"
-            label="Pavimento"
-            round
-            borderless
-          />
-        </div>
-      </label>
+      <div class="tw-rounded-xl bg-secondary tw-px-3 tw-flex-grow">
+        <q-select
+          color="primary"
+          :options="options"
+          label="Pavimento"
+          round
+          borderless
+        />
+      </div>
 
       <!-- Pavimento -->
       <div class="tw-pt-3">
@@ -96,27 +94,23 @@
   </q-layout>
 </template>
 
-<script
-  setup
-  lang="ts"
->
-import { useQuasar, setCssVar } from 'quasar';
-import { ref } from 'vue';
+<script setup lang="ts">
+import { useQuasar } from 'quasar';
+import { useLocal } from 'src/stores/local';
+import { useUi } from 'src/stores/ui';
+import { onBeforeMount, ref } from 'vue';
 
+const localStore = useLocal();
+const uiStore = useUi();
 const $q = useQuasar();
 const isMenuOpen = ref(false);
 const options = ['foo', 'bar'];
 
-const toggleTheme = () => {
-  if ($q.dark.isActive) {
-    setCssVar('secondary', '#FFFFFF');
-  } else {
-    setCssVar('secondary', '#030303');
-  }
-  $q.dark.toggle();
-};
-
 defineOptions({
   name: 'MainLayout',
+});
+
+onBeforeMount(async () => {
+  const res = await localStore.getLocal();
 });
 </script>

@@ -62,7 +62,7 @@
           />
           <q-btn
             v-close-popup
-            @click="edit = true"
+            @click="uiStore.editSvg = true"
             rounded
             unelevated
             color="primary"
@@ -75,11 +75,27 @@
 
     <!-- MARK: Popup confirmar edição -->
     <div
-      :data-open="edit"
+      :data-open="uiStore.editSvg"
+      :data-collapsed="collapsed && uiStore.editSvg"
       :data-dark="$q.dark.isActive"
-      class="tw-fixed tw-bottom-4 tw-left-1/2 -tw-translate-x-1/2 tw-bg-neutral-300 tw-p-4 tw-translate-y-[150%] data-[open=true]:tw-translate-y-0 tw-transition-transform tw-ease-in-out tw-rounded-3xl tw-flex tw-flex-col tw-gap-1 data-[dark=true]:tw-bg-neutral-900 tw-shadow"
+      class="tw-fixed tw-bottom-4 tw-left-1/2 -tw-translate-x-1/2 tw-bg-neutral-300 tw-p-4 tw-translate-y-[150%] data-[open=true]:tw-translate-y-0 tw-transition-transform tw-ease-in-out tw-rounded-3xl tw-flex tw-flex-col tw-gap-1 data-[dark=true]:tw-bg-neutral-900 tw-shadow data-[collapsed=true]:tw-translate-y-[77%] data-[collapsed=true]:hover:tw-translate-y-[71%]"
     >
-      <strong class="tw-text-lg text-primary">Editar pavimento {{ svgName }}</strong>
+      <div
+        class="tw-flex tw-items-center tw-justify-between tw-pb-2"
+        @click="collapsed = false"
+      >
+        <strong class="tw-text-lg text-primary">Editar pavimento {{ svgName }}</strong>
+        <q-btn
+          icon="keyboard_arrow_down"
+          :data-collapsed="collapsed && uiStore.editSvg"
+          class="data-[collapsed=true]:tw-rotate-180 tw-transition-transform"
+          flat
+          dense
+          rounded
+          @click.stop="collapsed = !collapsed"
+          color="primary"
+        />
+      </div>
       <span class="tw-text-md">Clique em uma vaga para configurá-la</span>
       <span>Vagas configuradas: <strong class="text-primary">0</strong></span>
       <strong class="tw-text-sm"></strong>
@@ -151,12 +167,14 @@
 
 <script setup lang="ts">
 import { useLocal } from 'src/stores/local';
+import { useUi } from 'src/stores/ui';
 import { onBeforeMount, ref, watch } from 'vue';
 
 defineOptions({
   name: 'IndexPage',
 });
 
+const uiStore = useUi();
 const svgElement = ref(); // Ref da div com v-html
 const localStore = useLocal();
 
@@ -179,38 +197,36 @@ const handleSvgClick = (e: MouseEvent) => {
 };
 
 const addLocation = ref(false); // Popup de adicionar pavimento
-const edit = ref(false); // Menu inferior de edição de pavimento
+const collapsed = ref(false); // Colapsa o menu de edição
 const svgName = ref(''); // model
 
 /**
  * Lida com o popup de adicionar localização sendo fechado
  */
 const handleHideAddLocation = () => {
-  if (edit.value) return;
+  if (uiStore.editSvg) return;
   selectedSvg.value = null;
   svgName.value = '';
 };
 
 /**
- * Lida com a adição de localização sendo cancelada
+ * Lida com a adição de localização sendo cancelada restaurando as variáveis ao seus valores
+ * iniciais
  */
 const cancelAdd = () => {
   addLocation.value = false;
-  edit.value = false;
+  uiStore.editSvg = false;
   selectedSvg.value = null;
   svgName.value = '';
 };
 
 /**
- * Retorna as váriaveis relacionada a adição de um novo SVG e edição aos seus valores inciais
+ * Lida com a edição de localização sendo cancelada restaurando as váriaveis relacionada a adição de
+ * um novo SVG e edição aos seus valores inciais
  */
 const cancelEdit = () => {
-  edit.value = false;
+  uiStore.editSvg = false;
   svgName.value = '';
   selectedSvg.value = null;
 };
-
-onBeforeMount(async () => {
-  // const res = await localStore.getLocal();
-});
 </script>
