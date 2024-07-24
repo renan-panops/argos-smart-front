@@ -7,7 +7,8 @@ export const useUi = defineStore(
   () => {
     const $q = useQuasar();
     const isDark = ref(false);
-    const editSvg = ref(false);
+    const editSvg = ref(false); // Popup de edição de SVG no inferior da tela
+    const addLocation = ref(false); // Dialog de adição de localidade
 
     const setThemeLight = () => {
       setCssVar('secondary', '#FFFFFF');
@@ -35,6 +36,7 @@ export const useUi = defineStore(
       setThemeLight,
       isDark,
       editSvg,
+      addLocation,
     };
   },
   {

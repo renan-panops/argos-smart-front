@@ -5,7 +5,7 @@
       v-if="selectedSvg == null"
     >
       <q-btn
-        @click="addLocation = true"
+        @click="uiStore.addLocation = true"
         class="active:tw-scale-105 tw-transition-all"
         round
         icon="add"
@@ -24,7 +24,7 @@
     <!-- MARK: dialog adição de pavimento (local) -->
     <q-dialog
       @before-hide="handleHideAddLocation"
-      v-model="addLocation"
+      v-model="uiStore.addLocation"
     >
       <div class="bg-secondary tw-p-3 !tw-rounded-3xl tw-flex tw-flex-col tw-gap-3">
         <span class="text-primary tw-text-lg">Configuração de pavimento</span>
@@ -196,7 +196,6 @@ const handleSvgClick = (e: MouseEvent) => {
   editElement.value = true;
 };
 
-const addLocation = ref(false); // Popup de adicionar pavimento
 const collapsed = ref(false); // Colapsa o menu de edição
 const svgName = ref(''); // model
 
@@ -214,7 +213,7 @@ const handleHideAddLocation = () => {
  * iniciais
  */
 const cancelAdd = () => {
-  addLocation.value = false;
+  uiStore.addLocation = false;
   uiStore.editSvg = false;
   selectedSvg.value = null;
   svgName.value = '';
