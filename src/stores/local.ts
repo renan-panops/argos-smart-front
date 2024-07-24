@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { api } from 'src/boot/axios';
 import { Notify } from 'quasar';
+import { ref } from 'vue';
 
 type Local = {
   id: string;
@@ -8,52 +9,96 @@ type Local = {
   floor_plan: string;
 };
 
-export const useLocal = defineStore('local', () => {
-  // Estado de loading de todas as actions assincronas
-  const loading = {
-    getLocal: false,
-    postLocal: false,
-  };
+export const useLocal = defineStore(
+  'local',
+  () => {
+    // Estado de loading de todas as actions assincronas
+    const loading = ref({
+      getLocal: false,
+      postLocal: false,
+      deleteLocal: false,
+    });
 
-  /**
-   * Lista todos os locais (pavimentos)
-   */
-  const getLocal = async (): Promise<Local | null> => {
-    try {
-      loading.getLocal = true;
-      const { data } = await api.get<Local>('/local/');
-      return data;
-    } catch (error) {
-      console.error(error);
-      Notify.create({
-        message: 'Erro listando pavimentos',
-        type: 'error',
-      });
-      return null;
-    } finally {
-      loading.getLocal = false;
-    }
-  };
+    const selectedLocal = ref<Local>();
 
-  /**
-   * Cria um novo local (pavimento)
-   */
-  const postLocal = async (payload: unknown): Promise<Local | null> => {
-    try {
-      loading.postLocal = true;
-      const { data } = await api.post<Local>('/local/', payload);
-      return data;
-    } catch (error) {
-      console.error(error);
-      Notify.create({
-        message: 'Erro criando pavimento',
-        type: 'error',
-      });
-      return null;
-    } finally {
-      loading.postLocal = false;
-    }
-  };
+    /**
+     * Lista todos os locais (pavimentos)
+     */
+    const getLocal = async (): Promise<Local[] | null> => {
+      try {
+        loading.value.getLocal = true;
+        const { data } = await api.get<Local[]>('/local/');
+        return data;
+      } catch (error) {
+        console.error(error);
+        Notify.create({
+          message: 'Erro listando pavimentos',
+          type: 'negative',
+        });
+        return null;
+      } finally {
+        loading.value.getLocal = false;
+      }
+    };
 
-  return { loading, getLocal };
-});
+    /**
+     * Cria um novo local a partir de um nome um svg.
+     * Seta loading.postLocal como true, faz chamada post a API retorna os dados ou notifica o erro
+     * e seta o loading.postLocal novamente como false
+     */
+    const postLocal = async (payload: unknown): Promise<Local | null> => {
+      try {
+        loading.value.postLocal = true;
+        const { data } = await api.post<Local>('/local/', payload);
+        Notify.create({
+          message: 'Pavimento criado com sucesso',
+          type: 'positive',
+        });
+        return data;
+      } catch (error) {
+        console.error(error);
+        Notify.create({
+          message: 'Erro criando pavimento',
+          type: 'negative',
+        });
+        return null;
+      } finally {
+        loading.value.postLocal = false;
+      }
+    };
+
+    const deleteLocal = async (localId: string) => {
+      try {
+        loading.value.deleteLocal = true;
+        const { data } = await api.delete(`/local/${localId}/`);
+        Notify.create({
+          message: 'Pavimento deletado',
+          type: 'positive',
+        });
+        return data;
+      } catch (error) {
+        console.error(error);
+        Notify.create({
+          message: 'Erro deletando pavimento',
+          type: 'negative',
+        });
+        return null;
+      } finally {
+        loading.value.deleteLocal = false;
+      }
+    };
+
+    return {
+      loading,
+      getLocal,
+      postLocal,
+      deleteLocal,
+      selectedLocal,
+    };
+  },
+  {
+    persist: {
+      paths: ['selectedLocal'],
+    },
+  },
+);
