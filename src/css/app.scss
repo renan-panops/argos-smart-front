@@ -1,3 +1,9 @@
 .body--light {
   background-color: #F7F7F7;
 }
+
+button {
+  text-transform: unset !important; // Remove texto em maiúsculo do Quasar
+  outline: none;
+  border: none;
+}
