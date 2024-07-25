@@ -1,5 +1,27 @@
 <template>
   <q-page>
+    <div class="tw-fixed tw-left-6 tw-top-20">
+      <q-icon
+        name="save"
+        size="md"
+        color="text"
+      />
+      <q-icon
+        name="warning"
+        color="warning"
+        size="sm"
+        class="-tw-ml-3 tw-mt-5"
+      />
+      <q-tooltip
+        class="tw-text-base"
+        :delay="100"
+        anchor="center right"
+        self="center left"
+      >
+        <!-- anchor="center left" -->
+        As alterações no SVG ainda não foram salvas, clique em "Salvar" para não perder as alterações.
+      </q-tooltip>
+    </div>
     <div
       class="tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-flex tw-flex-col tw-items-center"
       v-if="localStore.selectedLocal == null && svgText === ''"
@@ -29,24 +51,18 @@
       <div class="bg-secondary tw-p-3 !tw-rounded-3xl tw-flex tw-flex-col tw-gap-3">
         <span class="text-primary tw-text-lg">Configuração de pavimento</span>
         <q-input
+          :rules="[(val) => val != null && val !== '' || 'Campo Obrigatório']"
           label="Nome do pavimento"
-          class="tw-px-2 tw-rounded-xl"
-          :class="{
-            'tw-bg-neutral-900': $q.dark.isActive,
-            'tw-bg-neutral-100': !$q.dark.isActive,
-          }"
+          :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
           dense
           borderless
           v-model="svgName"
         />
         <q-file
+          :rules="[(val) => val != null || 'Campo obrigatório']"
           accept=".svg"
           label="SVG da planta baixa"
-          class="tw-px-2 tw-rounded-xl"
-          :class="{
-            'tw-bg-neutral-900': $q.dark.isActive,
-            'tw-bg-neutral-100': !$q.dark.isActive,
-          }"
+          :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
           dense
           borderless
           v-model="selectedSvg"
@@ -120,21 +136,16 @@
       </div>
     </div>
 
-    <q-dialog v-model="editElement">
+    <!-- MARK: Dialog de edição de vaga -->
+    <q-dialog
+      @hide="cancelEditSvgElement"
+      v-model="editElement"
+    >
       <div class="bg-secondary tw-p-3 !tw-rounded-3xl tw-flex tw-flex-col tw-gap-3">
-        <span class="text-primary tw-text-lg">Configuração de Vaga</span>
-        <q-input
-          label="ID da Lâmpada"
-          class="tw-px-2 tw-rounded-xl"
-          :class="{
-            'tw-bg-neutral-900': $q.dark.isActive,
-            'tw-bg-neutral-100': !$q.dark.isActive,
-          }"
-          dense
-          borderless
-        />
+        <span class="text-primary tw-text-lg">Configurações da Vaga</span>
         <q-input
           label="Nome da Vaga"
+          v-model="svgElementName"
           class="tw-px-2 tw-rounded-xl"
           :class="{
             'tw-bg-neutral-900': $q.dark.isActive,
@@ -143,6 +154,33 @@
           dense
           borderless
         />
+        <q-select
+          label="Dispositivo"
+          :loading="tuyaDevicesStore.loading.getTuyaDevices"
+          v-model="selectedDevice"
+          :options="tuyaDevicesStore.tuyaDevices"
+          option-label="id"
+          class="tw-px-2 tw-rounded-xl"
+          :class="{
+            'tw-bg-neutral-900': $q.dark.isActive,
+            'tw-bg-neutral-100': !$q.dark.isActive,
+          }"
+          dense
+          borderless
+        >
+          <template #append>
+            <q-btn
+              v-if="tuyaDevicesStore.loading.getTuyaDevices === false"
+              icon="refresh"
+              dense
+              rounded
+              flat
+              @click="tuyaDevicesStore.loadTuyaDevices"
+            >
+              <q-tooltip :delay="1000">Recarregar dispositivos</q-tooltip>
+            </q-btn>
+          </template>
+        </q-select>
         <div class="tw-flex tw-justify-between tw-gap-3">
           <q-btn
             v-close-popup
@@ -154,6 +192,7 @@
             class="tw-min-w-36"
           />
           <q-btn
+            @click="confirmEditSvgElement"
             v-close-popup
             rounded
             unelevated
@@ -169,6 +208,7 @@
 
 <script setup lang="ts">
 import { useLocal } from 'src/stores/local';
+import { TuyaDevice, useTuyaDevices } from 'src/stores/tuyaDevices';
 import { useUi } from 'src/stores/ui';
 import { ref, watch } from 'vue';
 
@@ -179,8 +219,9 @@ defineOptions({
 const uiStore = useUi();
 const svgElement = ref(); // Ref da div com v-html
 const localStore = useLocal();
+const tuyaDevicesStore = useTuyaDevices();
 
-const selectedSvg = ref(); // model
+const selectedSvg = ref(null); // model
 const svgText = ref(''); // Conteúdo do v-html
 watch(selectedSvg, async () => {
   svgText.value = await selectedSvg.value.text();
@@ -198,8 +239,51 @@ const handleSvgClick = (e: MouseEvent) => {
   editElement.value = true;
 };
 
+const svgElementName = ref();
+const selectedDevice = ref<TuyaDevice | null>();
+
 const collapsed = ref(false); // Colapsa o menu de edição
 const svgName = ref(''); // model
+
+/**
+ * Cancela a configuração de vaga e restaura as váriaveis pra seu estado inicial
+ */
+const cancelEditSvgElement = () => {
+  svgElementName.value = '';
+  selectedDevice.value = null;
+};
+
+/**
+ * Cria um novo dispositivo e edita o SVG
+ */
+const confirmEditSvgElement = () => {
+  const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+
+  textElement.setAttribute(
+    'x',
+    String(
+      Number(selectedSvgElement.value.attributes?.x?.value ?? 0)
+      + Number(selectedSvgElement.value.attributes.width.value)
+      / 2,
+    ),
+  ); // Posição x onde o texto será adicionado
+
+  textElement.setAttribute(
+    'y',
+    String(
+      Number(selectedSvgElement.value.attributes?.y?.value ?? 0)
+      + Number(selectedSvgElement.value.attributes.height.value)
+      / 2,
+    ),
+  ); // Posição y onde o texto será adicionado
+
+  textElement.setAttribute('fill', 'blue'); // Cor do texto
+  selectedSvgElement.value.setAttribute('id', svgElementName.value); // ID do elemento
+  textElement.textContent = svgElementName.value; // O texto a ser adicionado
+
+  // Adicione o novo elemento de texto ao SVG
+  selectedSvgElement.value.ownerSVGElement.appendChild(textElement);
+};
 
 /**
  * Lida com o popup de adicionar localização sendo fechado

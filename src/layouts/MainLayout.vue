@@ -181,6 +181,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { useLocal } from 'src/stores/local';
+import { useTuyaDevices } from 'src/stores/tuyaDevices';
 import { useUi } from 'src/stores/ui';
 import { onBeforeMount, ref } from 'vue';
 
@@ -189,6 +190,7 @@ defineOptions({
 });
 
 const localStore = useLocal();
+const tuyaDevicesStore = useTuyaDevices();
 const uiStore = useUi();
 const $q = useQuasar();
 const isMenuOpen = ref(false);
@@ -237,5 +239,6 @@ const handleDeleteLocal = async () => {
 
 onBeforeMount(async () => {
   await loadLocals();
+  await tuyaDevicesStore.loadTuyaDevices();
 });
 </script>

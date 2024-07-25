@@ -7,3 +7,20 @@ button {
   outline: none;
   border: none;
 }
+
+.q-input,
+.q-file {
+
+  .q-field__label,
+  .q-field__native {
+    padding-left: 10px;
+  }
+
+  .q-field__control {
+    border-radius: 12px !important;
+  }
+
+  .q-field__append {
+    padding-right: 10px;
+  }
+}
