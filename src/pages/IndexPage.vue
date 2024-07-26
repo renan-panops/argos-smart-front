@@ -48,45 +48,49 @@
       @before-hide="handleHideAddLocation"
       v-model="uiStore.addLocation"
     >
-      <div class="bg-secondary tw-p-3 !tw-rounded-3xl tw-flex tw-flex-col tw-gap-3">
-        <span class="text-primary tw-text-lg">Configuração de pavimento</span>
-        <q-input
-          :rules="[(val) => val != null && val !== '' || 'Campo Obrigatório']"
-          label="Nome do pavimento"
-          :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
-          dense
-          borderless
-          v-model="svgName"
-        />
-        <q-file
-          :rules="[(val) => val != null || 'Campo obrigatório']"
-          accept=".svg"
-          label="SVG da planta baixa"
-          :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
-          dense
-          borderless
-          v-model="selectedSvg"
-        />
-        <div class="tw-flex tw-justify-between tw-gap-3">
-          <q-btn
-            @click="cancelAdd"
-            rounded
-            outline
-            icon="chevron_left"
-            color="primary"
-            label="Cancelar"
-            class="tw-min-w-36"
+      <div class="bg-secondary tw-p-3 !tw-rounded-3xl">
+        <q-form
+          class="tw-flex tw-flex-col tw-gap-1"
+          @submit="uiStore.editSvg = true; uiStore.addLocation = false;"
+        >
+          <span class="text-primary tw-text-lg">Configuração de pavimento</span>
+          <q-input
+            :rules="[(val) => val != null && val !== '' || 'Campo Obrigatório']"
+            label="Nome do pavimento"
+            :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
+            dense
+            borderless
+            v-model="svgName"
           />
-          <q-btn
-            v-close-popup
-            @click="uiStore.editSvg = true"
-            rounded
-            unelevated
-            color="primary"
-            label="Próximo"
-            class="tw-min-w-36"
+          <q-file
+            :rules="[(val) => val != null || 'Campo obrigatório']"
+            accept=".svg"
+            label="SVG da planta baixa"
+            :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
+            dense
+            borderless
+            v-model="selectedSvg"
           />
-        </div>
+          <div class="tw-flex tw-justify-between tw-gap-3">
+            <q-btn
+              @click="cancelAdd"
+              rounded
+              outline
+              icon="chevron_left"
+              color="primary"
+              label="Cancelar"
+              class="tw-min-w-36"
+            />
+            <q-btn
+              type="submit"
+              rounded
+              unelevated
+              color="primary"
+              label="Próximo"
+              class="tw-min-w-36"
+            />
+          </div>
+        </q-form>
       </div>
     </q-dialog>
 
@@ -222,10 +226,6 @@ const localStore = useLocal();
 const tuyaDevicesStore = useTuyaDevices();
 
 const selectedSvg = ref(null); // model
-const svgText = ref(''); // Conteúdo do v-html
-watch(selectedSvg, async () => {
-  svgText.value = await selectedSvg.value.text();
-});
 
 // MARK: Edição de vaga
 const editElement = ref(false); // Popup configurar elemento (vaga)
@@ -244,6 +244,10 @@ const selectedDevice = ref<TuyaDevice | null>();
 
 const collapsed = ref(false); // Colapsa o menu de edição
 const svgName = ref(''); // model
+const svgText = ref(''); // Conteúdo do v-html
+watch(selectedSvg, async () => {
+  svgText.value = await selectedSvg.value.text();
+});
 
 /**
  * Cancela a configuração de vaga e restaura as váriaveis pra seu estado inicial
@@ -292,6 +296,7 @@ const handleHideAddLocation = () => {
   if (uiStore.editSvg) return;
   selectedSvg.value = null;
   svgName.value = '';
+  svgText.value = '';
 };
 
 /**
@@ -303,6 +308,7 @@ const cancelAdd = () => {
   uiStore.editSvg = false;
   selectedSvg.value = null;
   svgName.value = '';
+  svgText.value = '';
 };
 
 /**
