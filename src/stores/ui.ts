@@ -8,8 +8,8 @@ export const useUi = defineStore(
     const $q = useQuasar();
     const isDark = ref(false);
     const editSvg = ref(false); // Popup de edição de SVG no inferior da tela
+    const editCollapsed = ref(false); // Estado do popup de edição do SVG
     const addLocation = ref(false); // Dialog de adição de localidade
-    const svgText = ref('');
 
     const setThemeLight = () => {
       setCssVar('secondary', '#FFFFFF');
@@ -38,11 +38,12 @@ export const useUi = defineStore(
       isDark,
       editSvg,
       addLocation,
+      editCollapsed,
     };
   },
   {
     persist: {
-      paths: ['isDark'],
+      paths: ['isDark', 'editSvg', 'editCollapsed'],
     },
   },
 );

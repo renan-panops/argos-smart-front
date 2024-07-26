@@ -24,7 +24,7 @@
     </div>
     <div
       class="tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-flex tw-flex-col tw-items-center"
-      v-if="localStore.selectedLocal == null && svgText === ''"
+      v-if="localStore.svgHtml === ''"
     >
       <q-btn
         @click="uiStore.addLocation = true"
@@ -39,7 +39,7 @@
     <div
       v-else
       @click="handleSvgClick"
-      v-html="localStore.selectedLocal?.floor_plant ?? svgText"
+      v-html="localStore.svgHtml"
       ref="svgElement"
     />
 
@@ -60,7 +60,7 @@
             :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
             dense
             borderless
-            v-model="svgName"
+            v-model="localStore.svgName"
           />
           <q-file
             :rules="[(val) => val != null || 'Campo obrigatório']"
@@ -97,23 +97,23 @@
     <!-- MARK: Popup confirmar edição -->
     <div
       :data-open="uiStore.editSvg"
-      :data-collapsed="collapsed && uiStore.editSvg"
+      :data-collapsed="uiStore.editCollapsed && uiStore.editSvg"
       :data-dark="$q.dark.isActive"
       class="tw-fixed tw-bottom-4 tw-left-1/2 -tw-translate-x-1/2 tw-bg-neutral-300 tw-p-4 tw-translate-y-[150%] data-[open=true]:tw-translate-y-0 tw-transition-transform tw-ease-in-out tw-rounded-3xl tw-flex tw-flex-col tw-gap-1 data-[dark=true]:tw-bg-neutral-900 tw-shadow data-[collapsed=true]:!tw-translate-y-[77%] data-[collapsed=true]:hover:!tw-translate-y-[71%]"
     >
       <div
         class="tw-flex tw-items-center tw-justify-between tw-pb-2"
-        @click="collapsed = false"
+        @click="uiStore.editCollapsed = false"
       >
-        <strong class="tw-text-lg text-primary">Editar pavimento {{ svgName }}</strong>
+        <strong class="tw-text-lg text-primary">Editar pavimento {{ localStore.svgName }}</strong>
         <q-btn
           icon="keyboard_arrow_down"
-          :data-collapsed="collapsed && uiStore.editSvg"
+          :data-collapsed="uiStore.editCollapsed && uiStore.editSvg"
           class="data-[collapsed=true]:tw-rotate-180 tw-transition-transform"
           flat
           dense
           rounded
-          @click.stop="collapsed = !collapsed"
+          @click.stop="uiStore.editCollapsed = !uiStore.editCollapsed"
           color="primary"
         />
       </div>
@@ -225,7 +225,7 @@ const svgElement = ref(); // Ref da div com v-html
 const localStore = useLocal();
 const tuyaDevicesStore = useTuyaDevices();
 
-const selectedSvg = ref(null); // model
+const selectedSvg = ref<File | null>(null); // model
 
 // MARK: Edição de vaga
 const editElement = ref(false); // Popup configurar elemento (vaga)
@@ -242,11 +242,9 @@ const handleSvgClick = (e: MouseEvent) => {
 const svgElementName = ref();
 const selectedDevice = ref<TuyaDevice | null>();
 
-const collapsed = ref(false); // Colapsa o menu de edição
-const svgName = ref(''); // model
-const svgText = ref(''); // Conteúdo do v-html
 watch(selectedSvg, async () => {
-  svgText.value = await selectedSvg.value.text();
+  if (selectedSvg.value == null) return;
+  localStore.svgHtml = await selectedSvg.value.text();
 });
 
 /**
@@ -295,8 +293,8 @@ const confirmEditSvgElement = () => {
 const handleHideAddLocation = () => {
   if (uiStore.editSvg) return;
   selectedSvg.value = null;
-  svgName.value = '';
-  svgText.value = '';
+  localStore.svgName = '';
+  localStore.svgHtml = '';
 };
 
 /**
@@ -307,8 +305,8 @@ const cancelAdd = () => {
   uiStore.addLocation = false;
   uiStore.editSvg = false;
   selectedSvg.value = null;
-  svgName.value = '';
-  svgText.value = '';
+  localStore.svgName = '';
+  localStore.svgHtml = '';
 };
 
 /**
@@ -317,12 +315,13 @@ const cancelAdd = () => {
  */
 const cancelEdit = () => {
   uiStore.editSvg = false;
-  svgName.value = '';
   selectedSvg.value = null;
-  svgText.value = '';
+  localStore.svgName = '';
+  localStore.svgHtml = '';
 };
 
 const saveLocal = () => {
-  localStore.postLocal({ name: svgName.value, floor_plant: svgElement.value.innerHTML });
+  localStore.postLocal({ name: localStore.svgName, floor_plant: svgElement.value.innerHTML });
+  uiStore.editSvg = false;
 };
 </script>

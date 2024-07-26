@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { api } from 'src/boot/axios';
 import { Notify } from 'quasar';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 type Local = {
   id: string;
@@ -19,7 +19,15 @@ export const useLocal = defineStore(
       deleteLocal: false,
     });
 
-    const selectedLocal = ref<Local | null>(null);
+    const svgName = ref(''); // afetado pelo selectedLocal
+    const svgHtml = ref(''); // usado em um v-html, afetado pelo selectedLocal
+    const selectedLocal = ref<Local | null>(null); //* tem side effect de mudar o svg carregado na tela ao ser alterado
+    watch(selectedLocal, () => {
+      //* side effect de mudar selectedLocal, muda o SVG carregado na tela
+      if (selectedLocal.value == null) return;
+      svgHtml.value = selectedLocal.value.floor_plant;
+      svgName.value = selectedLocal.value.name;
+    });
 
     /**
      * Lista todos os locais (pavimentos)
@@ -94,11 +102,13 @@ export const useLocal = defineStore(
       postLocal,
       deleteLocal,
       selectedLocal,
+      svgHtml,
+      svgName,
     };
   },
   {
     persist: {
-      paths: ['selectedLocal'],
+      paths: ['selectedLocal', 'svgHtml', 'svgName'],
     },
   },
 );
