@@ -54,13 +54,7 @@ export const useTuyaDevices = defineStore('tuyaDevices', () => {
    */
   const loadTuyaDevices = async () => {
     const res = await getTuyaDevices();
-    if (res == null) {
-      Notify.create({
-        message: 'Erro listando dispositivos na rede',
-        type: 'negative',
-      });
-      return;
-    }
+    if (res == null) return;
     tuyaDevices.value = res;
   };
 
