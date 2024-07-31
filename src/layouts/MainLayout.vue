@@ -61,7 +61,7 @@
         <q-select
           v-model="localStore.selectedLocal"
           color="primary"
-          :options="localOptions"
+          :options="localStore.locals"
           option-label="name"
           label="Pavimento"
           label-color="primary"
@@ -117,6 +117,7 @@
               color="negative"
             />
             <q-btn
+              @click="uiStore.editSvg = true"
               :disable="localStore.selectedLocal == null"
               class="bg-secondary tw-flex-grow"
               label="Editar"
@@ -194,7 +195,6 @@ const tuyaDevicesStore = useTuyaDevices();
 const uiStore = useUi();
 const $q = useQuasar();
 const isMenuOpen = ref(false);
-const localOptions = ref();
 const advanced = ref(false);
 const deleteLocal = ref(false);
 const deleteCountdown = ref<number | null>(null);
@@ -219,26 +219,16 @@ const handleHideDeleteLocal = () => {
   deleteCountdown.value = null;
 };
 
-const loadLocals = async () => {
-  const locals = await localStore.getLocal();
-  localOptions.value = locals;
-  if (localStore.selectedLocal == null && locals != null) {
-    [localStore.selectedLocal] = locals;
-    return;
-  }
-  localStore.selectedLocal = null;
-};
-
 const handleDeleteLocal = async () => {
   if (localStore.selectedLocal == null) return;
   const res = await localStore.deleteLocal(localStore.selectedLocal.id);
   if (res == null) return;
   deleteLocal.value = false;
-  await loadLocals();
+  await localStore.loadLocals();
 };
 
 onBeforeMount(async () => {
-  await loadLocals();
+  await localStore.loadLocals();
   await tuyaDevicesStore.loadTuyaDevices();
 });
 </script>

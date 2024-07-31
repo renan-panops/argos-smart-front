@@ -49,6 +49,14 @@ export const useLocal = defineStore(
       }
     };
 
+    const locals = ref<Local[]>([]);
+    const loadLocals = async () => {
+      const res = await getLocal();
+      if (res == null) return;
+      locals.value = res;
+      [selectedLocal.value] = res;
+    };
+
     /**
      * Cria um novo local a partir de um nome um svg.
      * Seta loading.postLocal como true, faz chamada post a API retorna os dados ou notifica o erro
@@ -62,7 +70,7 @@ export const useLocal = defineStore(
           message: 'Pavimento criado com sucesso',
           type: 'positive',
         });
-        return data;
+        return data as Local;
       } catch (error) {
         console.error(error);
         Notify.create({
@@ -104,6 +112,8 @@ export const useLocal = defineStore(
       selectedLocal,
       svgHtml,
       svgName,
+      loadLocals,
+      locals,
     };
   },
   {

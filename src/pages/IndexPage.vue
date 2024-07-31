@@ -1,5 +1,5 @@
 <template>
-  <q-page>
+  <q-page class="tw-flex tw-flex-col tw-items-center tw-justify-center">
     <div class="tw-fixed tw-left-6 tw-top-20">
       <q-icon
         name="save"
@@ -22,6 +22,7 @@
         As alterações no SVG ainda não foram salvas, clique em "Salvar" para não perder as alterações.
       </q-tooltip>
     </div>
+
     <div
       class="tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-flex tw-flex-col tw-items-center"
       v-if="localStore.svgHtml === ''"
@@ -36,10 +37,12 @@
       />
       <strong class="tw-pt-4 text-primary tw-text-lg tw-uppercase">Adicionar pavimento</strong>
     </div>
+
     <div
       v-else
       @click="handleSvgClick"
       v-html="localStore.svgHtml"
+      class="svg__container tw-flex-grow"
       ref="svgElement"
     />
 
@@ -145,66 +148,64 @@
       @hide="cancelEditSvgElement"
       v-model="editElement"
     >
-      <div class="bg-secondary tw-p-3 !tw-rounded-3xl tw-flex tw-flex-col tw-gap-3">
-        <span class="text-primary tw-text-lg">Configurações da Vaga</span>
-        <q-input
-          label="Nome da Vaga"
-          v-model="svgElementName"
-          class="tw-px-2 tw-rounded-xl"
-          :class="{
-            'tw-bg-neutral-900': $q.dark.isActive,
-            'tw-bg-neutral-100': !$q.dark.isActive,
-          }"
-          dense
-          borderless
-        />
-        <q-select
-          label="Dispositivo"
-          :loading="tuyaDevicesStore.loading.getTuyaDevices"
-          v-model="selectedDevice"
-          :options="tuyaDevicesStore.tuyaDevices"
-          option-label="id"
-          class="tw-px-2 tw-rounded-xl"
-          :class="{
-            'tw-bg-neutral-900': $q.dark.isActive,
-            'tw-bg-neutral-100': !$q.dark.isActive,
-          }"
-          dense
-          borderless
+      <div class="bg-secondary tw-p-3 !tw-rounded-3xl">
+        <q-form
+          @submit="confirmEditSvgElement"
+          class="tw-flex tw-flex-col tw-gap-3"
         >
-          <template #append>
+          <span class="text-primary tw-text-lg">Configurações da Vaga</span>
+          <q-input
+            :rules="[(val) => val != null && val !== '' || 'Campo Obrigatório']"
+            label="Nome da Vaga"
+            :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
+            dense
+            borderless
+            v-model="svgElementName"
+          />
+          <q-select
+            :rules="[(val) => val != null || 'Campo Obrigatório']"
+            :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
+            label="Dispositivo"
+            :loading="tuyaDevicesStore.loading.getTuyaDevices"
+            v-model="selectedDevice"
+            :options="tuyaDevicesStore.tuyaDevices"
+            option-label="id"
+            dense
+            borderless
+          >
+            <template #append>
+              <q-btn
+                v-if="tuyaDevicesStore.loading.getTuyaDevices === false"
+                icon="refresh"
+                dense
+                rounded
+                flat
+                @click="tuyaDevicesStore.loadTuyaDevices"
+              >
+                <q-tooltip :delay="1000">Recarregar dispositivos</q-tooltip>
+              </q-btn>
+            </template>
+          </q-select>
+          <div class="tw-flex tw-justify-between tw-gap-3">
             <q-btn
-              v-if="tuyaDevicesStore.loading.getTuyaDevices === false"
-              icon="refresh"
-              dense
+              v-close-popup
               rounded
-              flat
-              @click="tuyaDevicesStore.loadTuyaDevices"
-            >
-              <q-tooltip :delay="1000">Recarregar dispositivos</q-tooltip>
-            </q-btn>
-          </template>
-        </q-select>
-        <div class="tw-flex tw-justify-between tw-gap-3">
-          <q-btn
-            v-close-popup
-            rounded
-            outline
-            icon="chevron_left"
-            color="primary"
-            label="Cancelar"
-            class="tw-min-w-36"
-          />
-          <q-btn
-            @click="confirmEditSvgElement"
-            v-close-popup
-            rounded
-            unelevated
-            color="primary"
-            label="Próximo"
-            class="tw-min-w-36"
-          />
-        </div>
+              outline
+              icon="chevron_left"
+              color="primary"
+              label="Cancelar"
+              class="tw-min-w-36"
+            />
+            <q-btn
+              type="submit"
+              rounded
+              unelevated
+              color="primary"
+              label="Próximo"
+              class="tw-min-w-36"
+            />
+          </div>
+        </q-form>
       </div>
     </q-dialog>
   </q-page>
@@ -235,6 +236,7 @@ const selectedSvgElement = ref(); // Ultimo elemento do SVG clicado
  * @param e MouseEvent elemento do svg clicado, ex: rect
  */
 const handleSvgClick = (e: MouseEvent) => {
+  if (!uiStore.editSvg) return;
   selectedSvgElement.value = e.target;
   editElement.value = true;
 };
@@ -258,7 +260,8 @@ const cancelEditSvgElement = () => {
 /**
  * Cria um novo dispositivo e edita o SVG
  */
-const confirmEditSvgElement = () => {
+const confirmEditSvgElement = async () => {
+  editElement.value = false;
   const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 
   textElement.setAttribute(
@@ -279,12 +282,15 @@ const confirmEditSvgElement = () => {
     ),
   ); // Posição y onde o texto será adicionado
 
-  textElement.setAttribute('fill', 'blue'); // Cor do texto
-  selectedSvgElement.value.setAttribute('id', svgElementName.value); // ID do elemento
+  textElement.setAttribute('fill', 'black'); // Cor do texto
+  await selectedSvgElement.value.setAttribute('id', svgElementName.value); // ID do elemento
   textElement.textContent = svgElementName.value; // O texto a ser adicionado
 
   // Adicione o novo elemento de texto ao SVG
-  selectedSvgElement.value.ownerSVGElement.appendChild(textElement);
+  await selectedSvgElement.value.ownerSVGElement.appendChild(textElement);
+  const textWidth = textElement.getBBox().width;
+  textElement.setAttribute('dx', `-${textWidth / 2}`);
+  localStore.svgHtml = svgElement.value.innerHTML;
 };
 
 /**
@@ -320,8 +326,11 @@ const cancelEdit = () => {
   localStore.svgHtml = '';
 };
 
-const saveLocal = () => {
-  localStore.postLocal({ name: localStore.svgName, floor_plant: svgElement.value.innerHTML });
+const saveLocal = async () => {
+  const res = await localStore.postLocal({ name: localStore.svgName, floor_plant: svgElement.value.innerHTML });
   uiStore.editSvg = false;
+  if (res == null) return;
+  localStore.locals.push(res);
+  localStore.selectedLocal = res;
 };
 </script>
