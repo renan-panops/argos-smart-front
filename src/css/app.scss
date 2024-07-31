@@ -9,7 +9,8 @@ button {
 }
 
 .q-input,
-.q-file {
+.q-file,
+.q-select {
 
   .q-field__label,
   .q-field__native {
@@ -20,7 +21,56 @@ button {
     border-radius: 12px !important;
   }
 
-  .q-field__append {
+  .q-field__append:last-child {
     padding-right: 10px;
+  }
+}
+
+.debug,
+.debug--red {
+  * {
+    outline: 1px solid red !important;
+  }
+
+  outline: 1px solid red !important;
+}
+
+.debug--green {
+  * {
+    outline: 1px solid green !important;
+  }
+
+  outline: 1px solid green !important;
+}
+
+.debug--blue {
+  * {
+    outline: 1px solid blue !important;
+  }
+
+  outline: 1px solid blue !important;
+}
+
+.debug--yellow {
+  * {
+    outline: 1px solid yellow !important;
+  }
+
+  outline: 1px solid yellow !important;
+}
+
+.svg__container {
+  font-weight: bolder;
+  padding: 12px;
+  width: 100%;
+  height: 100%;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+
+  svg {
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
   }
 }
