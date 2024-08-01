@@ -46,6 +46,12 @@
             {{ isMenuOpen ? 'Fechar menu' : 'Abrir menu' }}
           </q-tooltip>
         </q-btn>
+        <q-linear-progress
+          :query="redisStore.loading.getRedis"
+          :value="redisStore.pollingTimer / redisStore.pollingInterval"
+          class="absolute tw-left-0 tw-right-0 tw-bottom-0 tw-translate-y-full"
+          instant-feedback
+        />
       </q-toolbar>
     </q-header>
 
@@ -183,6 +189,7 @@
 <script setup lang="ts">
 import { useQuasar } from 'quasar';
 import { useLocal } from 'src/stores/local';
+import { useRedis } from 'src/stores/redis';
 import { useTuyaDevices } from 'src/stores/tuyaDevices';
 import { useUi } from 'src/stores/ui';
 import { onBeforeMount, ref } from 'vue';
@@ -191,6 +198,7 @@ defineOptions({
   name: 'MainLayout',
 });
 
+const redisStore = useRedis();
 const localStore = useLocal();
 const tuyaDevicesStore = useTuyaDevices();
 const uiStore = useUi();
@@ -226,10 +234,14 @@ const handleDeleteLocal = async () => {
   if (res == null) return;
   deleteLocal.value = false;
   await localStore.loadLocals();
+  if (localStore.selectedLocal == null) {
+    localStore.svgHtml = '';
+  }
 };
 
 onBeforeMount(async () => {
   await localStore.loadLocals();
-  await tuyaDevicesStore.loadTuyaDevices();
+  tuyaDevicesStore.loadTuyaDevices();
+  redisStore.startPoolingRedis();
 });
 </script>

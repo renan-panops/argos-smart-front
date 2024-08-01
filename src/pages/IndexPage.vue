@@ -50,7 +50,7 @@
       <div class="bg-secondary tw-p-3 !tw-rounded-3xl">
         <q-form
           class="tw-flex tw-flex-col tw-gap-1"
-          @submit="uiStore.editSvg = true; uiStore.addLocation = false;"
+          @submit="saveLocal"
         >
           <span class="text-primary tw-text-lg">Configuração de pavimento</span>
           <q-input
@@ -81,11 +81,12 @@
               class="tw-min-w-36"
             />
             <q-btn
+              :loading="localStore.loading.postLocal"
               type="submit"
               rounded
               unelevated
               color="primary"
-              label="Próximo"
+              label="Configurar Pavimento"
               class="tw-min-w-36"
             />
           </div>
@@ -119,21 +120,21 @@
       <span class="tw-text-md">Clique em uma vaga para configurá-la</span>
       <span>Vagas configuradas: <strong class="text-primary">0</strong></span>
       <strong class="tw-text-sm"></strong>
-      <div class="tw-flex tw-gap-1">
-        <q-btn
+      <div class="tw-flex tw-gap-1 tw-justify-end">
+        <!-- <q-btn
           label="Cancelar"
           outline
           color="primary"
           rounded
           class="bg-secondary"
           @click="cancelEdit"
-        />
+        /> -->
         <q-btn
-          label="Salvar Pavimento"
-          unelevated
+          label="Finalizar"
+          outline
           color="primary"
           rounded
-          class="tw-rounded-full"
+          class="bg-secondary"
           @click="saveLocal"
         />
       </div>
@@ -197,7 +198,7 @@
               rounded
               unelevated
               color="primary"
-              label="Próximo"
+              label="Salvar"
               class="tw-min-w-36"
             />
           </div>
@@ -208,6 +209,7 @@
 </template>
 
 <script setup lang="ts">
+import { useDevice } from 'src/stores/device';
 import { useLocal } from 'src/stores/local';
 import { TuyaDevice, useTuyaDevices } from 'src/stores/tuyaDevices';
 import { useUi } from 'src/stores/ui';
@@ -217,10 +219,12 @@ defineOptions({
   name: 'IndexPage',
 });
 
+const deviceStore = useDevice();
 const uiStore = useUi();
-const svgElement = ref(); // Ref da div com v-html
 const localStore = useLocal();
 const tuyaDevicesStore = useTuyaDevices();
+
+const svgElement = ref(); // Ref da div com v-html
 
 const selectedSvg = ref<File | null>(null); // model
 
@@ -257,6 +261,12 @@ const cancelEditSvgElement = () => {
  * Cria um novo dispositivo e edita o SVG
  */
 const confirmEditSvgElement = async () => {
+  if (selectedDevice.value == null) return;
+  if (svgElementName.value == null) return;
+
+  const res = await deviceStore.createDevice(selectedDevice.value.id, svgElementName.value);
+  if (res == null) return;
+
   editElement.value = false;
   const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 
@@ -317,16 +327,15 @@ const cancelAdd = () => {
  */
 const cancelEdit = () => {
   uiStore.editSvg = false;
-  selectedSvg.value = null;
-  localStore.svgName = '';
-  localStore.svgHtml = '';
 };
 
 const saveLocal = async () => {
+  uiStore.editSvg = true;
   const res = await localStore.postLocal({ name: localStore.svgName, floor_plant: svgElement.value.innerHTML });
-  uiStore.editSvg = false;
   if (res == null) return;
+  uiStore.addLocation = false;
   localStore.locals.push(res);
   localStore.selectedLocal = res;
+  localStore.svgHtml = res.floor_plant;
 };
 </script>
