@@ -1,6 +1,9 @@
 <template>
   <q-page class="tw-flex tw-flex-col tw-items-center tw-justify-center">
-    <div class="tw-fixed tw-left-6 tw-top-20">
+    <div
+      v-if="localStore.svgHtml !== '' && localStore.svgHtml !== localStore.selectedLocal?.floor_plant"
+      class="tw-fixed tw-left-6 tw-top-20"
+    >
       <q-icon
         name="save"
         size="md"
@@ -27,15 +30,8 @@
       class="tw-fixed tw-top-1/2 tw-left-1/2 -tw-translate-x-1/2 -tw-translate-y-1/2 tw-flex tw-flex-col tw-items-center"
       v-if="localStore.svgHtml === ''"
     >
-      <q-btn
-        @click="uiStore.addLocation = true"
-        class="active:tw-scale-105 tw-transition-all"
-        round
-        icon="add"
-        color="primary"
-        size="xl"
-      />
-      <strong class="tw-pt-4 text-primary tw-text-lg tw-uppercase">Adicionar pavimento</strong>
+      <strong class="tw-text-xl tw-opacity-60 tw-italic tw-font-light">Nenhum Pavimento Selecionado</strong>
+      <p class="tw-text-base tw-opacity-60 tw-italic tw-font-light">Abra o menu para selecionar um pavimento</p>
     </div>
 
     <div
