@@ -102,9 +102,10 @@
       <q-slide-transition class="tw-mt-2">
         <div v-show="advanced">
           <span class="text-primary">Configurações avançadas do sistema</span><br>
-          <p class="tw-pb-2"><strong>Atenção:</strong> As configurações abaixos foram pensadas apenas para uso interno,
-            erros na
-            configuração podem acarregar em mal funcionamento do sistema.</p>
+          <p class="tw-pb-2">
+            <strong>Atenção:</strong> As configurações abaixos foram pensadas apenas para uso interno,
+            erros na configuração podem acarregar em mal funcionamento do sistema.
+          </p>
           <div class="tw-flex tw-gap-2 tw-justify-between">
             <q-btn
               :disable="localStore.selectedLocal == null"
