@@ -17,13 +17,14 @@ export const useLocal = defineStore(
       getLocal: false,
       postLocal: false,
       deleteLocal: false,
+      patchLocal: false,
     });
 
     const svgName = ref(''); // afetado pelo selectedLocal
     const svgHtml = ref(''); // usado em um v-html, afetado pelo selectedLocal
-    const selectedLocal = ref<Local | null>(null); //* tem side effect de mudar o svg carregado na tela ao ser alterado
+    const selectedLocal = ref<Local | null>(null); //! side effect de mudar o svg carregado na tela ao ser alterado
     watch(selectedLocal, () => {
-      //* side effect de mudar selectedLocal, muda o SVG carregado na tela
+      //! side effect de mudar selectedLocal, muda o SVG carregado na tela
       if (selectedLocal.value == null) return;
       svgHtml.value = selectedLocal.value.floor_plant;
       svgName.value = selectedLocal.value.name;
@@ -104,12 +105,37 @@ export const useLocal = defineStore(
       }
     };
 
+    const patchLocal = async (
+      localId: string,
+      payload: { name?: string; floor_plant?: string },
+    ) => {
+      try {
+        loading.value.patchLocal = true;
+        const res = api.patch(`/local/${localId}/`, payload);
+        Notify.create({
+          message: 'Pavimento editado com sucesso',
+          type: 'positive',
+        });
+        return res;
+      } catch (error) {
+        Notify.create({
+          message: 'Erro editando pavimento',
+          type: 'negative',
+        });
+        console.error(error);
+        return null;
+      } finally {
+        loading.value.patchLocal = false;
+      }
+    };
+
     return {
       loading,
       getLocal,
       postLocal,
       deleteLocal,
       selectedLocal,
+      patchLocal,
       svgHtml,
       svgName,
       loadLocals,

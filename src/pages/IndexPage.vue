@@ -39,7 +39,7 @@
       @click="handleSvgClick"
       v-html="localStore.svgHtml"
       class="svg__container tw-flex-grow"
-      ref="svgElement"
+      ref="svgRef"
     />
 
     <!-- MARK: dialog adição de pavimento (local) -->
@@ -59,7 +59,7 @@
             :bg-color="$q.dark.isActive ? 'dark' : 'grey-2'"
             dense
             borderless
-            v-model="localStore.svgName"
+            v-model="localName"
           />
           <q-file
             :rules="[(val) => val != null || 'Campo obrigatório']"
@@ -135,7 +135,7 @@
           color="primary"
           rounded
           class="bg-secondary"
-          @click="saveLocal"
+          @click="confirmEditLocal"
         />
       </div>
     </div>
@@ -194,6 +194,7 @@
               class="tw-min-w-36"
             />
             <q-btn
+              :loading="loadingEditSvgElement"
               type="submit"
               rounded
               unelevated
@@ -209,8 +210,11 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
+import { useQuasar } from 'quasar';
 import { useDevice } from 'src/stores/device';
 import { useLocal } from 'src/stores/local';
+import { useRedis } from 'src/stores/redis';
 import { TuyaDevice, useTuyaDevices } from 'src/stores/tuyaDevices';
 import { useUi } from 'src/stores/ui';
 import { ref, watch } from 'vue';
@@ -219,14 +223,29 @@ defineOptions({
   name: 'IndexPage',
 });
 
+const redisStore = useRedis();
+
+const { devices } = storeToRefs(redisStore);
 const deviceStore = useDevice();
 const uiStore = useUi();
 const localStore = useLocal();
 const tuyaDevicesStore = useTuyaDevices();
+const $q = useQuasar();
 
-const svgElement = ref(); // Ref da div com v-html
+const svgRef = ref<HTMLDivElement>();
 
-const selectedSvg = ref<File | null>(null); // model
+watch(devices, () => {
+  if (devices.value == null) return;
+  devices.value.forEach((device) => {
+    if (localStore.selectedLocal == null || device.local !== localStore.selectedLocal.id) return;
+    document
+      .getElementById(device.name)
+      ?.setAttribute('fill', device.color);
+  });
+});
+
+const localName = ref();
+const selectedSvg = ref<File | null>(null); //! model, side effect com svgHtml
 
 // MARK: Edição de vaga
 const editElement = ref(false); // Popup configurar elemento (vaga)
@@ -245,6 +264,7 @@ const svgElementName = ref();
 const selectedDevice = ref<TuyaDevice | null>();
 
 watch(selectedSvg, async () => {
+  //! side effect
   if (selectedSvg.value == null) return;
   localStore.svgHtml = await selectedSvg.value.text();
 });
@@ -257,46 +277,53 @@ const cancelEditSvgElement = () => {
   selectedDevice.value = null;
 };
 
+const loadingEditSvgElement = ref(false);
+
 /**
  * Cria um novo dispositivo e edita o SVG
  */
 const confirmEditSvgElement = async () => {
-  if (selectedDevice.value == null) return;
-  if (svgElementName.value == null) return;
+  try {
+    loadingEditSvgElement.value = true;
+    if (selectedDevice.value == null) return;
+    if (svgElementName.value == null) return;
 
-  const res = await deviceStore.createDevice(selectedDevice.value.id, svgElementName.value);
-  if (res == null) return;
+    const res = await deviceStore.createDevice(selectedDevice.value.id, svgElementName.value);
+    if (res == null) return;
 
-  editElement.value = false;
-  const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    editElement.value = false;
+    const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text');
 
-  textElement.setAttribute(
-    'x',
-    String(
-      Number(selectedSvgElement.value.attributes?.x?.value ?? 0)
-      + Number(selectedSvgElement.value.attributes.width.value)
-      / 2,
-    ),
-  ); // Posição x onde o texto será adicionado
+    textElement.setAttribute(
+      'x',
+      String(
+        Number(selectedSvgElement.value.attributes?.x?.value ?? 0)
+        + Number(selectedSvgElement.value.attributes.width.value)
+        / 2,
+      ),
+    ); // Posição x onde o texto será adicionado
 
-  textElement.setAttribute(
-    'y',
-    String(
-      Number(selectedSvgElement.value.attributes?.y?.value ?? 0)
-      + Number(selectedSvgElement.value.attributes.height.value)
-      / 2,
-    ),
-  ); // Posição y onde o texto será adicionado
+    textElement.setAttribute(
+      'y',
+      String(
+        Number(selectedSvgElement.value.attributes?.y?.value ?? 0)
+        + Number(selectedSvgElement.value.attributes.height.value)
+        / 2,
+      ),
+    ); // Posição y onde o texto será adicionado
 
-  textElement.setAttribute('fill', 'black'); // Cor do texto
-  await selectedSvgElement.value.setAttribute('id', svgElementName.value); // ID do elemento
-  textElement.textContent = svgElementName.value; // O texto a ser adicionado
+    textElement.setAttribute('fill', 'black'); // Cor do texto
+    await selectedSvgElement.value.setAttribute('id', svgElementName.value); // ID do elemento
+    textElement.textContent = svgElementName.value; // O texto a ser adicionado
 
-  // Adicione o novo elemento de texto ao SVG
-  await selectedSvgElement.value.ownerSVGElement.appendChild(textElement);
-  const textWidth = textElement.getBBox().width;
-  textElement.setAttribute('dx', `-${textWidth / 2}`);
-  localStore.svgHtml = svgElement.value.innerHTML;
+    // Adicione o novo elemento de texto ao SVG
+    await selectedSvgElement.value.ownerSVGElement.appendChild(textElement);
+    const textWidth = textElement.getBBox().width;
+    textElement.setAttribute('dx', `-${textWidth / 2}`);
+    localStore.svgHtml = svgRef.value.innerHTML;
+  } finally {
+    loadingEditSvgElement.value = false;
+  }
 };
 
 /**
@@ -330,12 +357,36 @@ const cancelEdit = () => {
 };
 
 const saveLocal = async () => {
+  localStore.svgName = localName.value;
   uiStore.editSvg = true;
-  const res = await localStore.postLocal({ name: localStore.svgName, floor_plant: svgElement.value.innerHTML });
+  const res = await localStore.postLocal({ name: localStore.svgName, floor_plant: svgRef.value.innerHTML });
   if (res == null) return;
   uiStore.addLocation = false;
   localStore.locals.push(res);
   localStore.selectedLocal = res;
   localStore.svgHtml = res.floor_plant;
+};
+
+const confirmEditLocal = async () => {
+  if (localStore.selectedLocal == null) {
+    $q.notify({
+      message: 'Nenhum local selecionado',
+      type: 'negative',
+    });
+    return;
+  }
+
+  if (svgRef.value == null) {
+    $q.notify({
+      message: 'Nenhum SVG carregado em tela',
+      type: 'negative',
+    });
+    return;
+  }
+
+  const res = await localStore.patchLocal(localStore.selectedLocal.id, { floor_plant: svgRef.value.innerHTML });
+  if (res != null) {
+    uiStore.editSvg = false;
+  }
 };
 </script>
